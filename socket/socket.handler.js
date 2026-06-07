@@ -77,6 +77,12 @@ function registerSocketHandlers(io) {
       socket.to(roomId).emit('sync', time);
     });
 
+    // ── Chat Messaging ──────────────────────────────────────
+    socket.on('chat_message', ({ roomId, sender, text } = {}) => {
+      if (!roomId || typeof text !== 'string' || !text.trim()) return;
+      socket.to(roomId).emit('chat_message', { sender, text: text.trim() });
+    });
+
     // ── disconnect ──────────────────────────────────────────
     socket.on('disconnect', (reason) => {
       const { roomId, isHost } = socket.data || {};
