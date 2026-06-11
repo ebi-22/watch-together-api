@@ -5,32 +5,25 @@ const path    = require('path');
 const config  = require('../config/config');
 const logger  = require('../utils/logger');
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, config.upload.dir);
-  },
+const storage = multer.memoryStorage();
 
-  filename: (req, _file, cb) => {
-    // Read from req.params — always available before multer parses the body
-    const roomId = req.params.roomId || req.safeRoomId;
-    if (!roomId || typeof roomId !== 'string' || !roomId.trim()) {
-      return cb(new Error('INVALID_ROOM_ID'));
-    }
-    const safe = path.basename(roomId.trim()).replace(/[^a-zA-Z0-9_-]/g, '');
-    if (!safe) return cb(new Error('INVALID_ROOM_ID'));
-
-    // Attach to req so controllers can use it without re-parsing
-    req.safeRoomId = safe;
-
-    logger.debug('Storing upload', { roomId: safe });
-    cb(null, `${safe}.mp4`);
-  },
-});
+// Middleware to extract and validate roomId early
+const extractRoomId = (req, res, next) => {
+  const roomId = req.params.roomId || req.body.roomId;
+  if (!roomId || typeof roomId !== 'string' || !roomId.trim()) {
+    return next(new Error('INVALID_ROOM_ID'));
+  }
+  const safe = path.basename(roomId.trim()).replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!safe) return next(new Error('INVALID_ROOM_ID'));
+  
+  req.safeRoomId = safe;
+  next();
+};
 
 const fileFilter = (_req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
 
-  const mimeOk = config.upload.allowedMimeTypes.includes(file.mimetype);
+  const mimeOk = config.upload.allowedMimeTypes.includes(file.mimetype) || file.mimetype === 'application/octet-stream';
   const extOk  = config.upload.allowedExtensions.includes(ext);
 
   if (!mimeOk || !extOk) {
@@ -80,4 +73,4 @@ function handleMulterError(err, _req, res, next) {
   next(err);
 }
 
-module.exports = { upload, handleMulterError };
+module.exports = { upload, handleMulterError, extractRoomId };

@@ -33,7 +33,18 @@ function registerSocketHandlers(io) {
       }
       const room = rooms.get(safe);
       room.memberCount += 1;
-      if (isHost) room.hostSocketId = socket.id;
+      
+      // Auto-assign host if the room currently has no host
+      if (!room.hostSocketId) {
+        isHost = true;
+        room.hostSocketId = socket.id;
+        // Tell the client they are the host
+        socket.emit('role_update', { isHost: true });
+      } else if (isHost && room.hostSocketId !== socket.id) {
+        // They asked to be host but someone else already is, demote them
+        isHost = false;
+        socket.emit('role_update', { isHost: false });
+      }
 
       // Attach room info to socket for cleanup on disconnect
       socket.data.roomId = safe;

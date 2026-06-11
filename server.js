@@ -16,6 +16,10 @@ ensureUploadDir();
 
 // ── Create HTTP server ─────────────────────────────────────
 const server = http.createServer(app);
+server.setTimeout(0);
+server.requestTimeout = 0;
+server.headersTimeout = 0;
+server.keepAliveTimeout = 60000; // keep alive for 60s
 
 // ── Attach Socket.io ───────────────────────────────────────
 const io = new Server(server, {
