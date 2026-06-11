@@ -15,33 +15,21 @@ function uploadVideo(req, res, next) {
     }
 
     const roomId = req.safeRoomId;
-    const fileSizeGB = (req.file.size / (1024 * 1024 * 1024)).toFixed(2);
-    const fileSizeMB = (req.file.size / (1024 * 1024)).toFixed(2);
 
     logger.info('Upload complete', {
       roomId,
       originalName: req.file.originalname,
-      size: `${fileSizeGB} GB (${fileSizeMB} MB)`,
-      path: req.file.path,
+      size: `${(req.file.size / (1024 * 1024)).toFixed(2)} MB`,
     });
 
     // Notify all sockets in this room that the video is ready
     const io = req.app.get('io');
-    io.to(roomId).emit('video_ready', { 
-      roomId,
-      fileName: req.file.filename,
-      fileSize: req.file.size,
-    });
+    io.to(roomId).emit('video_ready', { roomId });
 
     return res.status(201).json({
       success: true,
       message: 'Video uploaded successfully.',
       roomId,
-      file: {
-        name: req.file.filename,
-        size: req.file.size,
-        sizeGB: fileSizeGB,
-      },
     });
   } catch (err) {
     next(err);

@@ -17,24 +17,15 @@ ensureUploadDir();
 // ── Create HTTP server ─────────────────────────────────────
 const server = http.createServer(app);
 
-// ── Configure HTTP Server Timeouts ──────────────────────────
-// Set timeout to 10 minutes (600s) for large file uploads
-server.requestTimeout = 10 * 60 * 1000;
-server.keepAliveTimeout = 65 * 1000;
-server.headersTimeout = 66 * 1000;
-
 // ── Attach Socket.io ───────────────────────────────────────
 const io = new Server(server, {
   cors: {
     origin: config.cors.origins,
     methods: ['GET', 'POST'],
   },
-  // Increase ping/connect timeouts for large file uploads
-  pingTimeout: 300000,      // 5 minutes
-  pingInterval: 60000,      // 1 minute
-  connectTimeout: 300000,   // 5 minutes
-  transports: ['websocket', 'polling'],
-  maxHttpBufferSize: 50 * 1024 * 1024,
+  // Increase ping timeout for large file uploads on slow connections
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 // Make io available to controllers via req.app.get('io')
@@ -44,7 +35,7 @@ app.set('io', io);
 registerSocketHandlers(io);
 
 // ── Start Listening ────────────────────────────────────────
-server.listen(config.port, '0.0.0.0', () => {
+server.listen(config.port, () => {
   logger.info(`Server running`, {
     env:  config.env,
     port: config.port,

@@ -31,8 +31,8 @@ app.use(morgan(
 ));
 
 // ── Body Parsing ───────────────────────────────────────────
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // ── Health Check ───────────────────────────────────────────
 app.get('/health', (_req, res) => {
