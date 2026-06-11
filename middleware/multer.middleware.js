@@ -50,6 +50,8 @@ const upload = multer({
   limits: {
     fileSize: config.upload.maxFileSizeBytes,
     files: 1,
+    fieldSize: 50 * 1024 * 1024,
+    fields: 10,
   },
 });
 
@@ -58,6 +60,12 @@ const upload = multer({
  * Must be used after the multer middleware.
  */
 function handleMulterError(err, _req, res, next) {
+  // Handle aborted requests gracefully
+  if (err && (err.message === 'Request aborted' || err.code === 'ECONNABORTED')) {
+    logger.warn('Upload aborted by client or timeout', { error: err.message });
+    return res.status(499).json({ error: 'Upload cancelled or timed out. Please try again.' });
+  }
+
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({

@@ -10,7 +10,7 @@ const config = {
   port: parseInt(process.env.PORT, 10) || 4000,
 
   cors: {
-    origins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
+    origins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000')
       .split(',')
       .map((o) => o.trim()),
   },
